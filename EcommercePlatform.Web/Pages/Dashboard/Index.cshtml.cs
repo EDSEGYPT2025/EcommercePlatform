@@ -25,7 +25,7 @@ namespace EcommercePlatform.Web.Pages.Dashboard
         {
             var userId = _userManager.GetUserId(User);
             // تم تصحيح اسم الدالة هنا
-            UserStore = await _storeService.GetUserStoresAsync(userId);
+            UserStore = await _storeService.GetUserStore
         }
     }
 }

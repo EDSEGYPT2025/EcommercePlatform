@@ -30,6 +30,12 @@ namespace EcommercePlatform.Services
         }
 
         /// <inheritdoc />
+        public async Task<Store> GetStoreByIdAsync(int storeId)
+        {
+            return await _context.Stores.FindAsync(storeId);
+        }
+
+        /// <inheritdoc />
         public async Task<Store> GetStoreBySlugAsync(string slug)
         {
             // استخدام Include لجلب البيانات المرتبطة (صاحب المتجر والإعدادات) في استعلام واحد
@@ -62,5 +68,12 @@ namespace EcommercePlatform.Services
         {
             return await _context.Stores.CountAsync(s => s.IsActive);
         }
+
+        /// <inheritdoc />
+        public async Task<bool> IsSlugAvailableAsync(string slug)
+        {
+            return !await _context.Stores.AnyAsync(s => s.Slug == slug);
+        }
     }
 }
+
