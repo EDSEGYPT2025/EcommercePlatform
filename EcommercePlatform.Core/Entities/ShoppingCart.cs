@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace EcommercePlatform.Core.Entities;
-public class ShoppingCart
+namespace EcommercePlatform.Core.Entities
 {
-    public List<CartItem> Items { get; set; } = new List<CartItem>();
-    public decimal SubTotal => Items.Sum(i => i.Total);
-    public decimal ShippingFee { get; set; }
-    public decimal Total => SubTotal + ShippingFee;
-    public int ItemCount => Items.Sum(i => i.Quantity);
+    public class ShoppingCart
+    {
+        public int Id { get; set; }
+        public string UserId { get; set; }
+        public ApplicationUser User { get; set; }
+        public List<CartItem> Items { get; set; } = new List<CartItem>();
+        public DateTime CreatedAt { get; set; } // <-- هذا هو السطر المطلوب
+    }
 }
+

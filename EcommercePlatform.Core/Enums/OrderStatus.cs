@@ -1,10 +1,11 @@
-﻿namespace EcommercePlatform.Core.Enums;
-public enum OrderStatus
+﻿namespace EcommercePlatform.Core.Enums
 {
-    Pending,
-    Confirmed,
-    Processing,
-    Shipped,
-    Delivered,
-    Cancelled
+    public enum OrderStatus
+    {
+        Pending,
+        Processing,
+        Shipped,
+        Delivered,
+        Cancelled
+    }
 }

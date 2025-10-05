@@ -1,104 +1,61 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
+using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace EcommercePlatform.Services
 {
     public class FileUploadService : IFileUploadService
     {
-        private readonly IWebHostEnvironment _environment;
-       
-        private readonly IConfiguration _configuration;
-        private readonly string[] _allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-        private readonly long _maxFileSize = 5 * 1024 * 1024; // 5 MB
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public FileUploadService(IWebHostEnvironment environment, IConfiguration configuration)
+        public FileUploadService(IWebHostEnvironment webHostEnvironment)
         {
-            _environment = environment;
-            _configuration = configuration;
+            _webHostEnvironment = webHostEnvironment;
         }
 
-        public async Task<string> UploadImageAsync(IFormFile file, string folder = "products")
+        public async Task<string> UploadFileAsync(IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
-                throw new ArgumentException("ملف غير صالح");
+                throw new ArgumentException("File is empty.");
             }
 
-            if (!IsValidImage(file))
+            // Validate file size (e.g., 5 MB limit)
+            const long maxFileSize = 5 * 1024 * 1024;
+            if (file.Length > maxFileSize)
             {
-                throw new ArgumentException("نوع الملف غير مدعوم. الرجاء رفع صورة بصيغة JPG, PNG, GIF, أو WEBP");
+                throw new ArgumentException("File size exceeds the limit of 5 MB.");
             }
 
-            // إنشاء اسم فريد للملف
-            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            // Validate file extension
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+            {
+                throw new ArgumentException("Invalid file type. Only images are allowed.");
+            }
 
-            // المسار الكامل
-            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", folder);
-
-            // إنشاء المجلد إذا لم يكن موجوداً
+            var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
             }
 
-            var filePath = Path.Combine(uploadsFolder, fileName);
+            // Generate a unique file name to prevent overwrites
+            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-            // حفظ الملف
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
             {
-                await file.CopyToAsync(stream);
+                await file.CopyToAsync(fileStream);
             }
 
-            // إرجاع المسار النسبي
-            return $"/uploads/{folder}/{fileName}";
-        }
-
-        public async Task<bool> DeleteImageAsync(string imagePath)
-        {
-            if (string.IsNullOrEmpty(imagePath))
-                return false;
-
-            try
-            {
-                var fullPath = Path.Combine(_environment.WebRootPath, imagePath.TrimStart('/'));
-
-                if (File.Exists(fullPath))
-                {
-                    File.Delete(fullPath);
-                    return true;
-                }
-
-                return false;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        public bool IsValidImage(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-                return false;
-
-            // التحقق من الحجم
-            if (file.Length > _maxFileSize)
-                return false;
-
-            // التحقق من الامتداد
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (!_allowedExtensions.Contains(extension))
-                return false;
-
-            // التحقق من نوع المحتوى
-            var validContentTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp" };
-            if (!validContentTypes.Contains(file.ContentType.ToLower()))
-                return false;
-
-            return true;
+            // Return the relative path to be stored in the database
+            return $"/uploads/{uniqueFileName}";
         }
     }
 }
+

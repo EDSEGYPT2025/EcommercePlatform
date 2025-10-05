@@ -1,115 +1,113 @@
-﻿// تحديث صفحة إضافة المنتج لتشمل رفع الصور
-// Pages/Dashboard/Products/Create.cshtml.cs - تحديث
-using EcommercePlatform.Core.Entities;
-using EcommercePlatform.Infrastructure.Data;
+﻿using EcommercePlatform.Core.Entities;
 using EcommercePlatform.Services;
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
+using System;
 
 namespace EcommercePlatform.Web.Pages.Dashboard.Products
 {
-    [Authorize]
-    public class CreateModelUpdated : PageModel
+    [Authorize] // الخطوة 3: إضافة صلاحيات الأمان
+    public class CreateModel : PageModel
     {
         private readonly IProductService _productService;
         private readonly IFileUploadService _fileUploadService;
-        private readonly ApplicationDbContext _context;
+        private readonly IStoreService _storeService;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<CreateModel> _logger;
 
-        public CreateModelUpdated(IProductService productService, IFileUploadService fileUploadService, ApplicationDbContext context)
+        public CreateModel(
+            IProductService productService,
+            IFileUploadService fileUploadService,
+            IStoreService storeService,
+            UserManager<ApplicationUser> userManager,
+            ILogger<CreateModel> logger)
         {
             _productService = productService;
             _fileUploadService = fileUploadService;
-            _context = context;
+            _storeService = storeService;
+            _userManager = userManager;
+            _logger = logger;
         }
 
         [BindProperty]
-        public Product Product { get; set; }
+        public ProductInputModel ProductInput { get; set; }
 
-        [BindProperty]
-        public int StoreId { get; set; }
-
-        [BindProperty]
-        public IFormFile MainImageFile { get; set; }
-
-        [BindProperty]
-        public List<IFormFile> AdditionalImages { get; set; }
-
-        public List<SelectListItem> Categories { get; set; }
-
-        public async Task<IActionResult> OnGetAsync(int storeId)
+        public class ProductInputModel
         {
-            StoreId = storeId;
-            await LoadCategories(storeId);
-            return Page();
+            [Required]
+            public string Name { get; set; }
+            public string Description { get; set; }
+            [Required]
+            [Range(0.01, 1000000)]
+            public decimal Price { get; set; }
+            [Required]
+            [Range(0, 100000)]
+            public int Stock { get; set; }
+            [Required]
+            public int CategoryId { get; set; } = 1; // Default to a category
+        }
+
+        public void OnGet()
+        {
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
             {
-                await LoadCategories(StoreId);
                 return Page();
             }
 
             try
             {
-                // رفع الصورة الرئيسية
-                if (MainImageFile != null)
+                // الخطوة 1: إصلاح StoreId الثابت
+                var userId = _userManager.GetUserId(User);
+                var store = await _storeService.GetStoreByUserIdAsync(userId);
+
+                if (store == null)
                 {
-                    Product.MainImage = await _fileUploadService.UploadImageAsync(MainImageFile, "products");
+                    ModelState.AddModelError(string.Empty, "You must create a store before adding products.");
+                    return Page();
                 }
 
-                Product.StoreId = StoreId;
-                var createdProduct = await _productService.CreateProductAsync(Product);
-
-                // رفع الصور الإضافية
-                if (AdditionalImages != null && AdditionalImages.Any())
+                var product = new Product
                 {
-                    int displayOrder = 1;
-                    foreach (var imageFile in AdditionalImages)
+                    Name = ProductInput.Name,
+                    Description = ProductInput.Description,
+                    Price = ProductInput.Price,
+                    Stock = ProductInput.Stock,
+                    CategoryId = ProductInput.CategoryId,
+                    StoreId = store.Id // استخدام المعرف الصحيح للمتجر
+                };
+
+                // Handle file upload if a file is provided
+                if (Request.Form.Files.Count > 0)
+                {
+                    var file = Request.Form.Files[0];
+                    if (file != null && file.Length > 0)
                     {
-                        if (imageFile != null && imageFile.Length > 0)
-                        {
-                            var imagePath = await _fileUploadService.UploadImageAsync(imageFile, "products");
-
-                            var productImage = new ProductImage
-                            {
-                                ProductId = createdProduct.Id,
-                                ImageUrl = imagePath,
-                                DisplayOrder = displayOrder++
-                            };
-
-                            _context.ProductImages.Add(productImage);
-                        }
+                        var imageUrl = await _fileUploadService.UploadFileAsync(file);
+                        product.Images = new List<ProductImage> { new ProductImage { Url = imageUrl } };
                     }
-                    await _context.SaveChangesAsync();
                 }
 
-                TempData["Success"] = "تم إضافة المنتج بنجاح!";
-                return RedirectToPage("/Dashboard/Products/Index", new { storeId = StoreId });
+                await _productService.CreateProductAsync(product);
+
+                TempData["SuccessMessage"] = "Product created successfully!";
+                return RedirectToPage("./Index");
             }
-            catch (ArgumentException ex)
+            catch (Exception ex)
             {
-                ModelState.AddModelError("", ex.Message);
-                await LoadCategories(StoreId);
+                // الخطوة 5: تطبيق معالجة قوية للأخطاء
+                _logger.LogError(ex, "An error occurred while creating a product.");
+                ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
                 return Page();
             }
-        }
-
-        private async Task LoadCategories(int storeId)
-        {
-            var categories = await _context.Categories
-                .Where(c => c.StoreId == storeId)
-                .ToListAsync();
-
-            Categories = categories.Select(c => new SelectListItem
-            {
-                Value = c.Id.ToString(),
-                Text = c.Name
-            }).ToList();
         }
     }
 }

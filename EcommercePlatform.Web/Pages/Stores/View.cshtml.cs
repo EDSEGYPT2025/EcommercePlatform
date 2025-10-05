@@ -1,8 +1,13 @@
-﻿// Pages/Stores/View.cshtml.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using EcommercePlatform.Core.Entities;
 using EcommercePlatform.Services;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity;
+using System.Linq;
+using System;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EcommercePlatform.Web.Pages.Stores
 {
@@ -10,26 +15,27 @@ namespace EcommercePlatform.Web.Pages.Stores
     {
         private readonly IStoreService _storeService;
         private readonly IProductService _productService;
+        private readonly ICartService _cartService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public ViewModel(IStoreService storeService, IProductService productService)
+        public ViewModel(
+            IStoreService storeService,
+            IProductService productService,
+            ICartService cartService,
+            UserManager<ApplicationUser> userManager)
         {
             _storeService = storeService;
             _productService = productService;
+            _cartService = cartService;
+            _userManager = userManager;
         }
 
         public Store Store { get; set; }
         public List<Product> Products { get; set; }
-        public List<Category> Categories { get; set; }
 
-        [BindProperty(SupportsGet = true)]
-        public int? CategoryId { get; set; }
-
-        [BindProperty(SupportsGet = true)]
-        public string SearchTerm { get; set; }
-
-        public async Task<IActionResult> OnGetAsync(string slug)
+        public async Task<IActionResult> OnGetAsync(string storeSlug)
         {
-            Store = await _storeService.GetStoreBySlugAsync(slug);
+            Store = await _storeService.GetStoreBySlugAsync(storeSlug);
 
             if (Store == null || !Store.IsActive)
             {
@@ -37,43 +43,34 @@ namespace EcommercePlatform.Web.Pages.Stores
             }
 
             Products = await _productService.GetStoreProductsAsync(Store.Id);
-
-            // تصفية المنتجات حسب التصنيف
-            if (CategoryId.HasValue)
-            {
-                Products = Products.Where(p => p.CategoryId == CategoryId.Value).ToList();
-            }
-
-            // البحث في المنتجات
-            if (!string.IsNullOrWhiteSpace(SearchTerm))
-            {
-                Products = Products.Where(p =>
-                    p.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    p.Description.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)
-                ).ToList();
-            }
-
-            // عرض المنتجات النشطة فقط
             Products = Products.Where(p => p.IsActive).ToList();
 
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAddToCartAsync(int productId, string slug)
+        [Authorize] // يتطلب تسجيل الدخول لإضافة المنتج للسلة
+        public async Task<IActionResult> OnPostAddToCartAsync(int productId, string storeSlug)
         {
-            var product = await _productService.GetProductByIdAsync(productId);
-
-            if (product == null || !product.IsActive || product.Stock <= 0)
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
             {
-                TempData["Error"] = "المنتج غير متوفر";
-                return RedirectToPage(new { slug });
+                // إذا لم يكن المستخدم مسجلاً، اطلب منه تسجيل الدخول
+                return Challenge();
             }
 
-            var cartService = HttpContext.RequestServices.GetRequiredService<ICartService>();
-            cartService.AddToCart(product.Id, product.Name, product.MainImage, product.Price, 1);
+            var product = await _productService.GetProductByIdAsync(productId);
+            if (product == null || !product.IsActive || product.Stock <= 0)
+            {
+                TempData["Error"] = "المنتج غير متوفر حالياً.";
+                return RedirectToPage(new { storeSlug });
+            }
 
-            TempData["Success"] = "تمت إضافة المنتج إلى السلة";
-            return RedirectToPage(new { slug });
+            // --- تم التصحيح لاستدعاء الدالة الصحيحة بالمعلومات الصحيحة ---
+            await _cartService.AddToCartAsync(user.Id, productId, 1);
+
+            TempData["Success"] = $"تمت إضافة '{product.Name}' إلى السلة بنجاح!";
+            return RedirectToPage(new { storeSlug });
         }
     }
 }
+

@@ -1,103 +1,90 @@
 ﻿using EcommercePlatform.Core.Entities;
-using Microsoft.AspNetCore.Http;
+using EcommercePlatform.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace EcommercePlatform.Services;
-public class CartService : ICartService
+namespace EcommercePlatform.Services
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    private const string CartSessionKey = "ShoppingCart";
-
-    public CartService(IHttpContextAccessor httpContextAccessor)
+    public class CartService : ICartService
     {
-        _httpContextAccessor = httpContextAccessor;
-    }
+        private readonly ApplicationDbContext _context;
 
-    public ShoppingCart GetCart()
-    {
-        var session = _httpContextAccessor.HttpContext.Session;
-        var cartBytes = session.TryGetValue(CartSessionKey, out var value) ? value : null;
-        var cartJson = cartBytes != null ? System.Text.Encoding.UTF8.GetString(cartBytes) : null;
-
-        if (string.IsNullOrEmpty(cartJson))
+        public CartService(ApplicationDbContext context)
         {
-            return new ShoppingCart();
+            _context = context;
         }
 
-        return JsonSerializer.Deserialize<ShoppingCart>(cartJson) ?? new ShoppingCart();
-    }
-
-    public void AddToCart(int productId, string productName, string productImage, decimal price, int quantity = 1)
-    {
-        var cart = GetCart();
-        var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == productId);
-
-        if (existingItem != null)
+        public async Task AddToCartAsync(string userId, int productId, int quantity)
         {
-            existingItem.Quantity += quantity;
-        }
-        else
-        {
-            cart.Items.Add(new CartItem
+            var cart = await GetCartAsync(userId);
+            if (cart == null)
             {
-                ProductId = productId,
-                ProductName = productName,
-                ProductImage = productImage,
-                Price = price,
-                Quantity = quantity
-            });
-        }
+                cart = new ShoppingCart { UserId = userId, CreatedAt = DateTime.UtcNow };
+                _context.ShoppingCarts.Add(cart);
+            }
 
-        SaveCart(cart);
-    }
-
-    public void UpdateQuantity(int productId, int quantity)
-    {
-        var cart = GetCart();
-        var item = cart.Items.FirstOrDefault(i => i.ProductId == productId);
-
-        if (item != null)
-        {
-            if (quantity <= 0)
+            var cartItem = cart.Items.FirstOrDefault(i => i.ProductId == productId);
+            if (cartItem != null)
             {
-                cart.Items.Remove(item);
+                cartItem.Quantity += quantity;
             }
             else
             {
-                item.Quantity = quantity;
+                cart.Items.Add(new CartItem { ProductId = productId, Quantity = quantity });
             }
 
-            SaveCart(cart);
+            await _context.SaveChangesAsync();
         }
-    }
 
-    public void RemoveFromCart(int productId)
-    {
-        var cart = GetCart();
-        var item = cart.Items.FirstOrDefault(i => i.ProductId == productId);
-
-        if (item != null)
+        public async Task<ShoppingCart> GetCartAsync(string userId)
         {
-            cart.Items.Remove(item);
-            SaveCart(cart);
+            return await _context.ShoppingCarts
+                .Include(c => c.Items)
+                .ThenInclude(i => i.Product)
+                .ThenInclude(p => p.Images)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
         }
-    }
 
-    public void ClearCart()
-    {
-        var session = _httpContextAccessor.HttpContext.Session;
-        session.Remove(CartSessionKey);
-    }
+        public async Task ClearCartAsync(string userId)
+        {
+            var cart = await GetCartAsync(userId);
+            if (cart != null)
+            {
+                _context.CartItems.RemoveRange(cart.Items);
+                await _context.SaveChangesAsync();
+            }
+        }
 
-    private void SaveCart(ShoppingCart cart)
-    {
-        var session = _httpContextAccessor.HttpContext.Session;
-        var cartJson = JsonSerializer.Serialize(cart);
-        session.Set(CartSessionKey, System.Text.Encoding.UTF8.GetBytes(cartJson));
+        public async Task RemoveItemFromCartAsync(string userId, int cartItemId)
+        {
+            var cart = await GetCartAsync(userId);
+            var cartItem = cart?.Items.FirstOrDefault(i => i.Id == cartItemId);
+            if (cartItem != null)
+            {
+                _context.CartItems.Remove(cartItem);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task UpdateItemQuantityAsync(string userId, int cartItemId, int quantity)
+        {
+            var cart = await GetCartAsync(userId);
+            var cartItem = cart?.Items.FirstOrDefault(i => i.Id == cartItemId);
+            if (cartItem != null)
+            {
+                if (quantity > 0)
+                {
+                    cartItem.Quantity = quantity;
+                }
+                else
+                {
+                    _context.CartItems.Remove(cartItem);
+                }
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }
+

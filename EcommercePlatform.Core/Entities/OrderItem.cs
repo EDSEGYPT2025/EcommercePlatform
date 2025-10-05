@@ -1,17 +1,13 @@
-﻿// OrderItem.cs
-namespace EcommercePlatform.Core.Entities
+﻿namespace EcommercePlatform.Core.Entities
 {
-    // OrderItem.cs
     public class OrderItem
     {
         public int Id { get; set; }
-        public int Quantity { get; set; }
-        public decimal UnitPrice { get; set; }
-        public decimal TotalPrice { get; set; }
-
         public int OrderId { get; set; }
         public Order Order { get; set; }
         public int ProductId { get; set; }
         public Product Product { get; set; }
+        public int Quantity { get; set; }
+        public decimal Price { get; set; } // Price at the time of purchase
     }
 }

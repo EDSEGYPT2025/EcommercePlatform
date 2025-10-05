@@ -12,5 +12,8 @@ namespace EcommercePlatform.Services
         Task<bool> UpdateStoreAsync(Store store);
         Task<bool> DeleteStoreAsync(int storeId);
         Task<bool> IsSlugAvailableAsync(string slug, int? excludeStoreId = null);
+
+        Task<IEnumerable<Store>> GetAllStoresAsync();
+        Task<Store> GetStoreByUserIdAsync(string userId);
     }
 }

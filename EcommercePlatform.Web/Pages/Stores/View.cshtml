@@ -1,212 +1,85 @@
-﻿@page "/stores/{slug}"
+﻿@page "/stores/{storeSlug}"
 @model EcommercePlatform.Web.Pages.Stores.ViewModel
 @{
     ViewData["Title"] = Model.Store.Name;
-    var settings = Model.Store.Settings;
 }
 
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <style>
-        :root {
-            --primary-color: @(settings?.PrimaryColor ?? "#000000");
-            --secondary-color: @(settings?.SecondaryColor ?? "#ffffff");
-        }
-        .navbar-brand { color: var(--primary-color) !important; }
-        .btn-primary { background-color: var(--primary-color); border-color: var(--primary-color); }
-        .btn-primary:hover { opacity: 0.9; }
-        .product-card { transition: transform 0.2s; }
-        .product-card:hover { transform: translateY(-5px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    </style>
-</head>
-<body>
-    <!-- Header -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="#">
-                @if (!string.IsNullOrEmpty(Model.Store.Logo))
-                {
-                    <img src="@Model.Store.Logo" alt="@Model.Store.Name" height="40">
-                }
-                else
-                {
-                    <span>@Model.Store.Name</span>
-                }
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#products">المنتجات</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#about">عن المتجر</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#contact">اتصل بنا</a>
-                    </li>
-                </ul>
-                <form method="get" class="d-flex">
-                    <input class="form-control me-2" type="search" name="searchTerm" placeholder="ابحث عن منتج..." value="@Model.SearchTerm">
-                    <button class="btn btn-outline-primary" type="submit">بحث</button>
-                </form>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card store-header-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <img src="@Model.Store.LogoUrl" alt="Store Logo" class="store-logo rounded-circle me-3"
+                             onerror="this.onerror=null; this.src='/images/placeholder.png';">
+                        <div>
+                            <h1 class="store-name">@Model.Store.Name</h1>
+                            <p class="store-description text-muted">@Model.Store.Description</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <div class="bg-light py-5 mb-4">
-        <div class="container text-center">
-            <h1 class="display-4 fw-bold">@Model.Store.Name</h1>
-            <p class="lead">@Model.Store.Description</p>
         </div>
     </div>
 
-    <!-- Products Section -->
-    <div class="container" id="products">
-        <div class="row">
-            <!-- Filters Sidebar -->
-            <div class="col-md-3 mb-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">التصنيفات</h5>
-                    </div>
-                    <div class="list-group list-group-flush">
-                        <a asp-page="/Stores/View" asp-route-slug="@Model.Store.Slug"
-                           class="list-group-item list-group-item-action @(Model.CategoryId == null ? "active" : "")">
-                            جميع المنتجات
-                        </a>
-                        @foreach (var category in Model.Store.Products.Select(p => p.Category).Where(c => c != null).Distinct())
-                        {
-                            <a asp-page="/Stores/View" asp-route-slug="@Model.Store.Slug" asp-route-categoryId="@category.Id"
-                               class="list-group-item list-group-item-action @(Model.CategoryId == category.Id ? "active" : "")">
-                                @category.Name
-                            </a>
-                        }
-                    </div>
-                </div>
-
-                <!-- Store Info -->
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h6 class="card-title">معلومات التواصل</h6>
-                        @if (!string.IsNullOrEmpty(settings?.Phone))
-                        {
-                            <p class="mb-2">
-                                <i class="bi bi-telephone"></i> @settings.Phone
-                            </p>
-                        }
-                        @if (!string.IsNullOrEmpty(settings?.Email))
-                        {
-                            <p class="mb-2">
-                                <i class="bi bi-envelope"></i> @settings.Email
-                            </p>
-                        }
-                        @if (!string.IsNullOrEmpty(settings?.Address))
-                        {
-                            <p class="mb-0">
-                                <i class="bi bi-geo-alt"></i> @settings.Address
-                            </p>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <!-- Products Grid -->
-            <div class="col-md-9">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3>المنتجات (@Model.Products.Count)</h3>
-                </div>
-
-                @if (Model.Products.Any())
+    <div class="row mt-4">
+        <div class="col-12">
+            <h2 class="mb-3">المنتجات</h2>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                @foreach (var product in Model.Products)
                 {
-                    <div class="row row-cols-1 row-cols-md-3 g-4">
-                        @foreach (var product in Model.Products)
-                        {
-                            <div class="col">
-                                <div class="card h-100 product-card">
-                                    <a asp-page="/Stores/ProductDetails" asp-route-slug="@Model.Store.Slug" asp-route-productSlug="@product.Slug" class="text-decoration-none">
-                                        @if (!string.IsNullOrEmpty(product.MainImage))
-                                        {
-                                            <img src="@product.MainImage" class="card-img-top" alt="@product.Name" style="height: 250px; object-fit: cover;">
-                                        }
-                                        else
-                                        {
-                                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 250px;">
-                                                <i class="bi bi-image fs-1 text-white"></i>
-                                            </div>
-                                        }
-                                        <div class="card-body">
-                                            <h5 class="card-title text-dark">@product.Name</h5>
-                                            <p class="card-text text-muted small">@product.Description?.Substring(0, Math.Min(80, product?.Description.Length ?? 0))...</p>
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h4 class="text-primary mb-0">@product.Price.ToString("N0") جنيه</h4>
-                                                    @if (product.CompareAtPrice.HasValue && product.CompareAtPrice > product.Price)
-                                                    {
-                                                        <small class="text-muted text-decoration-line-through">@product.CompareAtPrice.Value.ToString("N0") جنيه</small>
-                                                    }
-                                                </div>
-                                                @if (product.Stock > 0)
-                                                {
-                                                    <span class="badge bg-success">متوفر</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-danger">نفذ</span>
-                                                }
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <div class="card-footer">
-                                        @if (product.Stock > 0)
-                                        {
-                                            <button onclick="addToCart(@product.Id)" class="btn btn-primary w-100">
-                                                <i class="bi bi-cart-plus"></i> أضف للسلة
-                                            </button>
-                                        }
-                                        else
-                                        {
-                                            <button class="btn btn-secondary w-100" disabled>غير متوفر</button>
-                                        }
-                                    </div>
+                    <div class="col">
+                        <div class="card h-100 product-card">
+                            <a asp-page="/Products/View" asp-route-storeSlug="@Model.Store.Slug" asp-route-productSlug="@product.Slug">
+                                <img src="@product.MainImage" class="card-img-top" alt="@product.Name"
+                                     onerror="this.onerror=null; this.src='/images/placeholder.png';">
+                            </a>
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">@product.Name</h5>
+                                <p class="card-text text-muted">@product.Description.Substring(0, Math.Min(product.Description.Length, 100))...</p>
+                                <div class="mt-auto">
+                                    <p class="product-price">@product.Price.ToString("C")</p>
+                                    <form method="post" asp-page-handler="AddToCart">
+                                        <input type="hidden" name="productId" value="@product.Id" />
+                                        <input type="hidden" name="storeSlug" value="@Model.Store.Slug" />
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="bi bi-cart-plus"></i> إضافة للسلة
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> لا توجد منتجات متاحة حالياً
+                        </div>
                     </div>
                 }
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Footer -->
-    <footer class="bg-light mt-5 py-4">
-        <div class="container text-center">
-            <p class="mb-0">© @DateTime.Now.Year @Model.Store.Name - جميع الحقوق محفوظة</p>
-            <p class="text-muted small">مدعوم من منصة المتاجر الإلكترونية</p>
-        </div>
-    </footer>
+<style>
+    .store-header-card {
+        border: none;
+        background-color: #f8f9fa;
+    }
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function addToCart(productId) {
-            // يمكنك هنا إضافة منطق السلة
-            alert('تمت إضافة المنتج للسلة! (سيتم تطويرها لاحقاً)');
+    .store-logo {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+    }
+
+    .product-card {
+        transition: transform .2s, box-shadow .2s;
+    }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,.1);
         }
-    </script>
-</body>
-</html>
+
+    .product-price {
+        font-size: 1.25rem;
+        font-weight: bold;
+        color: #007bff;
+    }
+</style>

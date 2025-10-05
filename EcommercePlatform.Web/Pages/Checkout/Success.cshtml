@@ -1,61 +1,24 @@
-﻿@page "/stores/{storeSlug}/checkout/success"
+﻿@page
 @model EcommercePlatform.Web.Pages.Checkout.SuccessModel
 @{
-    ViewData["Title"] = "تم الطلب بنجاح";
+    ViewData["Title"] = "تم استلام طلبك بنجاح";
 }
 
-<div class="container mt-5">
+<div class="container mt-5 mb-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card text-center">
-                <div class="card-body py-5">
+            <div class="card text-center shadow-sm">
+                <div class="card-body p-5">
                     <div class="mb-4">
                         <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
                     </div>
-                    <h2 class="card-title text-success mb-3">تم إرسال طلبك بنجاح!</h2>
-                    <p class="card-text lead mb-4">
-                        شكراً لك على طلبك من @Model.Store.Name
-                    </p>
-
-                    <div class="alert alert-info">
-                        <h5>رقم الطلب: <strong>@Model.Order.OrderNumber</strong></h5>
-                        <p class="mb-0">الرجاء الاحتفاظ برقم الطلب للمتابعة</p>
+                    <h2 class="card-title">شكرًا لك!</h2>
+                    <p class="card-text text-muted">لقد تم استلام طلبك بنجاح وسنقوم بمعالجته في أقرب وقت ممكن.</p>
+                    <div class="alert alert-success mt-4">
+                        رقم طلبك هو: <strong>@Model.Order.OrderNumber</strong>
                     </div>
-
-                    <div class="row mt-4">
-                        <div class="col-md-6">
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <h6>معلومات الطلب</h6>
-                                    <p class="mb-1"><strong>الاسم:</strong> @Model.Order.CustomerName</p>
-                                    <p class="mb-1"><strong>الهاتف:</strong> @Model.Order.CustomerPhone</p>
-                                    <p class="mb-0"><strong>الإجمالي:</strong> @Model.Order.Total.ToString("N0") جنيه</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <h6>عنوان الشحن</h6>
-                                    <p class="mb-1">@Model.Order.ShippingAddress</p>
-                                    <p class="mb-0">@Model.Order.City</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-4">
-                        <p class="text-muted">
-                            <i class="bi bi-envelope"></i>
-                            سيتم إرسال تأكيد الطلب على بريدك الإلكتروني
-                        </p>
-                    </div>
-
-                    <div class="mt-4">
-                        <a asp-page="/Stores/View" asp-route-slug="@Model.Store.Slug" class="btn btn-primary btn-lg">
-                            العودة للمتجر
-                        </a>
-                    </div>
+                    <p>سيتم التواصل معك قريبًا لتأكيد تفاصيل الشحن.</p>
+                    <a asp-page="/Index" class="btn btn-primary mt-3">العودة للصفحة الرئيسية</a>
                 </div>
             </div>
         </div>

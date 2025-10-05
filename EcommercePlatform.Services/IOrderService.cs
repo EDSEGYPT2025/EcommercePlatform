@@ -1,14 +1,17 @@
-﻿// IOrderService.cs
-using EcommercePlatform.Core.Entities;
+﻿using EcommercePlatform.Core.Entities;
+using EcommercePlatform.Core.Enums;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace EcommercePlatform.Services
 {
-    // IOrderService.cs
     public interface IOrderService
     {
-        Task<List<Order>> GetStoreOrdersAsync(int storeId);
+        // تم تحديث التعريف ليقبل المدينة
+        Task<Order> CreateOrderAsync(string userId, string shippingAddress, string city);
         Task<Order> GetOrderByIdAsync(int orderId);
-        Task<Order> CreateOrderAsync(Order order);
-        Task<bool> UpdateOrderStatusAsync(int orderId, OrderStatus status);
+        Task<IEnumerable<Order>> GetUserOrdersAsync(string userId);
+        Task UpdateOrderStatusAsync(int orderId, OrderStatus status);
     }
 }
+

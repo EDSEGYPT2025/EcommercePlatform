@@ -1,51 +1,46 @@
-﻿// Pages/Cart/Index.cshtml.cs
-using EcommercePlatform.Core.Entities;
+﻿using EcommercePlatform.Core.Entities;
 using EcommercePlatform.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Threading.Tasks;
 
 namespace EcommercePlatform.Web.Pages.Cart
 {
     public class IndexModel : PageModel
     {
         private readonly ICartService _cartService;
-        private readonly IStoreService _storeService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public IndexModel(ICartService cartService, IStoreService storeService)
+        public IndexModel(ICartService cartService, UserManager<ApplicationUser> userManager)
         {
             _cartService = cartService;
-            _storeService = storeService;
+            _userManager = userManager;
         }
 
         public ShoppingCart Cart { get; set; }
 
-        [BindProperty(SupportsGet = true)]
-        public string StoreSlug { get; set; }
-
-        public async Task<IActionResult> OnGetAsync()
+        public async Task OnGetAsync()
         {
-            Cart = _cartService.GetCart();
-            return Page();
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                Cart = await _cartService.GetCartAsync(user.Id);
+            }
         }
 
-        public IActionResult OnPostUpdateQuantity(int productId, int quantity)
+        public async Task<IActionResult> OnPostRemoveItemAsync(int cartItemId)
         {
-            _cartService.UpdateQuantity(productId, quantity);
-            return RedirectToPage(new { storeSlug = StoreSlug });
-        }
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                // --- تم التصحيح هنا لإرسال معرف المستخدم ومعرف عنصر السلة ---
+                await _cartService.RemoveItemFromCartAsync(user.Id, cartItemId);
+                TempData["Success"] = "تم حذف المنتج من السلة بنجاح.";
+            }
 
-        public IActionResult OnPostRemove(int productId)
-        {
-            _cartService.RemoveFromCart(productId);
-            TempData["Success"] = "تم حذف المنتج من السلة";
-            return RedirectToPage(new { storeSlug = StoreSlug });
-        }
-
-        public IActionResult OnPostClear()
-        {
-            _cartService.ClearCart();
-            TempData["Success"] = "تم تفريغ السلة";
-            return RedirectToPage(new { storeSlug = StoreSlug });
+            return RedirectToPage();
         }
     }
 }
+

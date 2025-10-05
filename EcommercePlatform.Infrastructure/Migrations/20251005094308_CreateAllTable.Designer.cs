@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EcommercePlatform.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251005072734_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251005094308_CreateAllTable")]
+    partial class CreateAllTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -97,6 +97,32 @@ namespace EcommercePlatform.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("EcommercePlatform.Core.Entities.CartItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShoppingCartId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ShoppingCartId");
+
+                    b.ToTable("CartItems");
+                });
+
             modelBuilder.Entity("EcommercePlatform.Core.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -105,22 +131,15 @@ namespace EcommercePlatform.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("StoreId")
-                        .HasColumnType("int");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("StoreId", "Slug")
-                        .IsUnique();
 
                     b.ToTable("Categories");
                 });
@@ -137,58 +156,30 @@ namespace EcommercePlatform.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CustomerEmail")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CustomerName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CustomerPhone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("OrderNumber")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ShippingAddress")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("ShippingFee")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<int>("StoreId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("SubTotal")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<decimal>("Total")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderNumber")
-                        .IsUnique();
-
-                    b.HasIndex("StoreId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Orders");
                 });
@@ -204,19 +195,14 @@ namespace EcommercePlatform.Infrastructure.Migrations
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("TotalPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -235,11 +221,10 @@ namespace EcommercePlatform.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("CategoryId")
+                    b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
                     b.Property<decimal?>("CompareAtPrice")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -252,22 +237,16 @@ namespace EcommercePlatform.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("MainImage")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<decimal>("Price")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Slug")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Stock")
                         .HasColumnType("int");
@@ -279,8 +258,7 @@ namespace EcommercePlatform.Infrastructure.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("StoreId", "Slug")
-                        .IsUnique();
+                    b.HasIndex("StoreId");
 
                     b.ToTable("Products");
                 });
@@ -293,21 +271,41 @@ namespace EcommercePlatform.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
 
                     b.ToTable("ProductImages");
+                });
+
+            modelBuilder.Entity("EcommercePlatform.Core.Entities.ShoppingCart", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("ShoppingCarts");
                 });
 
             modelBuilder.Entity("EcommercePlatform.Core.Entities.Store", b =>
@@ -325,21 +323,16 @@ namespace EcommercePlatform.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Domain")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Logo")
+                    b.Property<string>("LogoUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerId")
                         .IsRequired()
@@ -347,26 +340,23 @@ namespace EcommercePlatform.Infrastructure.Migrations
 
                     b.Property<string>("Slug")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("SubscriptionEndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("SubscriptionPlanId")
+                    b.Property<int?>("SubscriptionPlanId")
                         .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Domain")
-                        .IsUnique();
-
-                    b.HasIndex("OwnerId");
-
-                    b.HasIndex("Slug")
+                    b.HasIndex("OwnerId")
                         .IsUnique();
 
                     b.HasIndex("SubscriptionPlanId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Stores");
                 });
@@ -395,7 +385,6 @@ namespace EcommercePlatform.Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<decimal>("FreeShippingThreshold")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Language")
@@ -415,7 +404,6 @@ namespace EcommercePlatform.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("ShippingFee")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("StoreId")
@@ -450,56 +438,18 @@ namespace EcommercePlatform.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("MonthlyPrice")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("YearlyPrice")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
                     b.ToTable("SubscriptionPlans");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            HasAdvancedReports = false,
-                            HasCustomDomain = false,
-                            MaxOrders = 50,
-                            MaxProducts = 10,
-                            MonthlyPrice = 0m,
-                            Name = "الخطة المجانية",
-                            YearlyPrice = 0m
-                        },
-                        new
-                        {
-                            Id = 2,
-                            HasAdvancedReports = true,
-                            HasCustomDomain = false,
-                            MaxOrders = 500,
-                            MaxProducts = 100,
-                            MonthlyPrice = 299m,
-                            Name = "الخطة الأساسية",
-                            YearlyPrice = 2990m
-                        },
-                        new
-                        {
-                            Id = 3,
-                            HasAdvancedReports = true,
-                            HasCustomDomain = true,
-                            MaxOrders = -1,
-                            MaxProducts = 1000,
-                            MonthlyPrice = 599m,
-                            Name = "الخطة الاحترافية",
-                            YearlyPrice = 5990m
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -582,10 +532,12 @@ namespace EcommercePlatform.Infrastructure.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -622,10 +574,12 @@ namespace EcommercePlatform.Infrastructure.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
@@ -635,26 +589,34 @@ namespace EcommercePlatform.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("EcommercePlatform.Core.Entities.Category", b =>
+            modelBuilder.Entity("EcommercePlatform.Core.Entities.CartItem", b =>
                 {
-                    b.HasOne("EcommercePlatform.Core.Entities.Store", "Store")
+                    b.HasOne("EcommercePlatform.Core.Entities.Product", "Product")
                         .WithMany()
-                        .HasForeignKey("StoreId")
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Store");
+                    b.HasOne("EcommercePlatform.Core.Entities.ShoppingCart", "ShoppingCart")
+                        .WithMany("Items")
+                        .HasForeignKey("ShoppingCartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ShoppingCart");
                 });
 
             modelBuilder.Entity("EcommercePlatform.Core.Entities.Order", b =>
                 {
-                    b.HasOne("EcommercePlatform.Core.Entities.Store", "Store")
-                        .WithMany("Orders")
-                        .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                    b.HasOne("EcommercePlatform.Core.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Store");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("EcommercePlatform.Core.Entities.OrderItem", b =>
@@ -666,7 +628,7 @@ namespace EcommercePlatform.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("EcommercePlatform.Core.Entities.Product", "Product")
-                        .WithMany("OrderItems")
+                        .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -681,12 +643,13 @@ namespace EcommercePlatform.Infrastructure.Migrations
                     b.HasOne("EcommercePlatform.Core.Entities.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("EcommercePlatform.Core.Entities.Store", "Store")
                         .WithMany("Products")
                         .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Category");
@@ -705,23 +668,40 @@ namespace EcommercePlatform.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("EcommercePlatform.Core.Entities.ShoppingCart", b =>
+                {
+                    b.HasOne("EcommercePlatform.Core.Entities.ApplicationUser", "User")
+                        .WithOne("ShoppingCart")
+                        .HasForeignKey("EcommercePlatform.Core.Entities.ShoppingCart", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("EcommercePlatform.Core.Entities.Store", b =>
                 {
                     b.HasOne("EcommercePlatform.Core.Entities.ApplicationUser", "Owner")
-                        .WithMany("Stores")
-                        .HasForeignKey("OwnerId")
+                        .WithOne("Store")
+                        .HasForeignKey("EcommercePlatform.Core.Entities.Store", "OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("EcommercePlatform.Core.Entities.SubscriptionPlan", "SubscriptionPlan")
                         .WithMany("Stores")
-                        .HasForeignKey("SubscriptionPlanId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasForeignKey("SubscriptionPlanId");
+
+                    b.HasOne("EcommercePlatform.Core.Entities.ApplicationUser", "User")
+                        .WithMany("Stores")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Owner");
 
                     b.Navigation("SubscriptionPlan");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("EcommercePlatform.Core.Entities.StoreSettings", b =>
@@ -788,6 +768,12 @@ namespace EcommercePlatform.Infrastructure.Migrations
 
             modelBuilder.Entity("EcommercePlatform.Core.Entities.ApplicationUser", b =>
                 {
+                    b.Navigation("ShoppingCart")
+                        .IsRequired();
+
+                    b.Navigation("Store")
+                        .IsRequired();
+
                     b.Navigation("Stores");
                 });
 
@@ -804,14 +790,15 @@ namespace EcommercePlatform.Infrastructure.Migrations
             modelBuilder.Entity("EcommercePlatform.Core.Entities.Product", b =>
                 {
                     b.Navigation("Images");
+                });
 
-                    b.Navigation("OrderItems");
+            modelBuilder.Entity("EcommercePlatform.Core.Entities.ShoppingCart", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("EcommercePlatform.Core.Entities.Store", b =>
                 {
-                    b.Navigation("Orders");
-
                     b.Navigation("Products");
 
                     b.Navigation("Settings")

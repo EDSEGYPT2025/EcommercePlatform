@@ -1,6 +1,5 @@
-﻿
-@page
-@model EcommercePlatform.Web.Pages.Dashboard.Products.CreateModelUpdated
+﻿@page
+@model EcommercePlatform.Web.Pages.Dashboard.Products.CreateModel
 @{
     ViewData["Title"] = "إضافة منتج جديد";
 }
@@ -14,79 +13,56 @@
                 </div>
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
-                        <input type="hidden" asp-for="StoreId" />
+                        @* Display validation errors *@
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                         <div class="row">
                             <div class="col-md-8">
                                 <div class="mb-3">
-                                    <label asp-for="Product.Name" class="form-label">اسم المنتج *</label>
-                                    <input asp-for="Product.Name" class="form-control" required />
-                                    <span asp-validation-for="Product.Name" class="text-danger"></span>
+                                    <label asp-for="ProductInput.Name" class="form-label">اسم المنتج *</label>
+                                    <input asp-for="ProductInput.Name" class="form-control" />
+                                    <span asp-validation-for="ProductInput.Name" class="text-danger"></span>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label asp-for="Product.Description" class="form-label">وصف المنتج</label>
-                                    <textarea asp-for="Product.Description" class="form-control" rows="5"></textarea>
-                                    <span asp-validation-for="Product.Description" class="text-danger"></span>
+                                    <label asp-for="ProductInput.Description" class="form-label">وصف المنتج</label>
+                                    <textarea asp-for="ProductInput.Description" class="form-control" rows="5"></textarea>
+                                    <span asp-validation-for="ProductInput.Description" class="text-danger"></span>
                                 </div>
 
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <label asp-for="Product.Price" class="form-label">السعر *</label>
+                                        <label asp-for="ProductInput.Price" class="form-label">السعر *</label>
                                         <div class="input-group">
-                                            <input asp-for="Product.Price" type="number" step="0.01" class="form-control" required />
+                                            <input asp-for="ProductInput.Price" type="number" step="0.01" class="form-control" />
                                             <span class="input-group-text">جنيه</span>
                                         </div>
-                                        <span asp-validation-for="Product.Price" class="text-danger"></span>
+                                        <span asp-validation-for="ProductInput.Price" class="text-danger"></span>
                                     </div>
 
                                     <div class="col-md-6 mb-3">
-                                        <label asp-for="Product.CompareAtPrice" class="form-label">السعر قبل الخصم</label>
-                                        <div class="input-group">
-                                            <input asp-for="Product.CompareAtPrice" type="number" step="0.01" class="form-control" />
-                                            <span class="input-group-text">جنيه</span>
-                                        </div>
+                                        <label asp-for="ProductInput.Stock" class="form-label">الكمية المتوفرة *</label>
+                                        <input asp-for="ProductInput.Stock" type="number" class="form-control" />
+                                        <span asp-validation-for="ProductInput.Stock" class="text-danger"></span>
                                     </div>
                                 </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="Product.Stock" class="form-label">الكمية المتوفرة *</label>
-                                        <input asp-for="Product.Stock" type="number" class="form-control" required />
-                                        <span asp-validation-for="Product.Stock" class="text-danger"></span>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label asp-for="Product.CategoryId" class="form-label">التصنيف</label>
-                                        <select asp-for="Product.CategoryId" class="form-select" asp-items="Model.Categories">
-                                            <option value="">-- بدون تصنيف --</option>
-                                        </select>
-                                    </div>
+                                <div class="mb-3">
+                                    <label asp-for="ProductInput.CategoryId" class="form-label">التصنيف</label>
+                                    <select asp-for="ProductInput.CategoryId" class="form-select">
+                                        <option value="1">-- تصنيف افتراضي --</option>
+                                    </select>
                                 </div>
                             </div>
 
                             <div class="col-md-4">
                                 <div class="card bg-light">
                                     <div class="card-body">
-                                        <h6 class="card-title">الصور</h6>
-
+                                        <h6 class="card-title">صورة المنتج</h6>
                                         <div class="mb-3">
-                                            <label for="MainImageFile" class="form-label">الصورة الرئيسية</label>
-                                            <input type="file" asp-for="MainImageFile" class="form-control" accept="image/*" onchange="previewImage(this, 'mainPreview')" />
+                                            <label for="mainImage" class="form-label">الصورة الرئيسية</label>
+                                            <input type="file" name="mainImage" class="form-control" accept="image/*" onchange="previewImage(this, 'mainPreview')" />
                                             <small class="form-text text-muted">الحد الأقصى: 5 ميجابايت</small>
                                             <div id="mainPreview" class="mt-2"></div>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label for="AdditionalImages" class="form-label">صور إضافية</label>
-                                            <input type="file" asp-for="AdditionalImages" class="form-control" accept="image/*" multiple onchange="previewMultipleImages(this, 'additionalPreview')" />
-                                            <small class="form-text text-muted">يمكنك اختيار عدة صور</small>
-                                            <div id="additionalPreview" class="mt-2"></div>
-                                        </div>
-
-                                        <div class="form-check">
-                                            <input asp-for="Product.IsActive" type="checkbox" class="form-check-input" checked />
-                                            <label asp-for="Product.IsActive" class="form-check-label">المنتج نشط</label>
                                         </div>
                                     </div>
                                 </div>
@@ -99,7 +75,7 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-save"></i> حفظ المنتج
                             </button>
-                            <a asp-page="/Dashboard/Products/Index" asp-route-storeId="@Model.StoreId" class="btn btn-secondary">
+                            <a asp-page="./Index" class="btn btn-secondary">
                                 إلغاء
                             </a>
                         </div>
@@ -119,7 +95,7 @@
 
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     const img = document.createElement('img');
                     img.src = e.target.result;
                     img.className = 'img-fluid rounded';
@@ -127,28 +103,6 @@
                     preview.appendChild(img);
                 };
                 reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function previewMultipleImages(input, previewId) {
-            const preview = document.getElementById(previewId);
-            preview.innerHTML = '';
-
-            if (input.files) {
-                Array.from(input.files).forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const div = document.createElement('div');
-                        div.className = 'mb-2';
-                        const img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.className = 'img-fluid rounded';
-                        img.style.maxHeight = '150px';
-                        div.appendChild(img);
-                        preview.appendChild(div);
-                    };
-                    reader.readAsDataURL(file);
-                });
             }
         }
     </script>
