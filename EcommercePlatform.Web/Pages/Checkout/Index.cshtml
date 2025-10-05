@@ -1,0 +1,165 @@
+﻿@page "/stores/{storeSlug}/checkout"
+@model EcommercePlatform.Web.Pages.Checkout.IndexModel
+@{
+    ViewData["Title"] = "إتمام الطلب";
+}
+
+// Pages/Checkout/Index.cshtml
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-badge"></i> معلومات العميل
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="OrderModel.CustomerName" class="form-label">الاسم الكامل *</label>
+                                <input asp-for="OrderModel.CustomerName" class="form-control" required />
+                                <span asp-validation-for="OrderModel.CustomerName" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="OrderModel.CustomerEmail" class="form-label">البريد الإلكتروني *</label>
+                                <input asp-for="OrderModel.CustomerEmail" type="email" class="form-control" required />
+                                <span asp-validation-for="OrderModel.CustomerEmail" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="OrderModel.CustomerPhone" class="form-label">رقم الهاتف *</label>
+                            <input asp-for="OrderModel.CustomerPhone" type="tel" class="form-control" placeholder="01xxxxxxxxx" required />
+                            <span asp-validation-for="OrderModel.CustomerPhone" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="OrderModel.ShippingAddress" class="form-label">عنوان الشحن *</label>
+                            <textarea asp-for="OrderModel.ShippingAddress" class="form-control" rows="3" required></textarea>
+                            <span asp-validation-for="OrderModel.ShippingAddress" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="OrderModel.City" class="form-label">المدينة *</label>
+                            <input asp-for="OrderModel.City" class="form-control" required />
+                            <span asp-validation-for="OrderModel.City" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="OrderModel.Notes" class="form-label">ملاحظات (اختياري)</label>
+                            <textarea asp-for="OrderModel.Notes" class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i> تأكيد الطلب
+                            </button>
+                            <a asp-page="/Cart/Index" asp-route-storeSlug="@Model.StoreSlug" class="btn btn-outline-secondary btn-lg">
+                                العودة للسلة
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- ملخص الطلب -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">ملخص الطلب</h5>
+                </div>
+                <div class="card-body">
+                    @foreach (var item in Model.Cart.Items)
+                    {
+                        <div class="d-flex justify-content-between mb-2">
+                            <div>
+                                <strong>@item.ProductName</strong>
+                                <br>
+                                <small class="text-muted">@item.Quantity × @item.Price.ToString("N0") جنيه</small>
+                            </div>
+                            <strong>@item.Total.ToString("N0") جنيه</strong>
+                        </div>
+                    }
+                    <hr>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>المجموع الفرعي:</span>
+                        <strong>@Model.Cart.SubTotal.ToString("N0") جنيه</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>رسوم الشحن:</span>
+                        <strong>
+                            @if (Model.Cart.ShippingFee == 0)
+                            {
+                                <span class="text-success">مجاني</span>
+                            }
+                            else
+                            {
+                                @Model.Cart.ShippingFee.ToString("N0") <text>جنيه</text>
+                            }
+                        </strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <h5>الإجمالي:</h5>
+                        <h5 class="text-primary">@Model.Cart.Total.ToString("N0") جنيه</h5>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.Store.Settings.FreeShippingEnabled)
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-truck"></i>
+                    <strong>شحن مجاني</strong> للطلبات أكثر من @Model.Store.Settings.FreeShippingThreshold.ToString("N0") جنيه
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+// Pages/Checkout/Success.cshtml.cs
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using EcommercePlatform.Core.Entities;
+using EcommercePlatform.Services;
+
+namespace EcommercePlatform.Web.Pages.Checkout
+{
+    public class SuccessModel : PageModel
+    {
+        private readonly IOrderService _orderService;
+        private readonly IStoreService _storeService;
+
+        public SuccessModel(IOrderService orderService, IStoreService storeService)
+        {
+            _orderService = orderService;
+            _storeService = storeService;
+        }
+
+        public Order Order { get; set; }
+        public Store Store { get; set; }
+
+        public async Task<IActionResult>
+    OnGetAsync(int orderId, string storeSlug)
+    {
+    Order = await _orderService.GetOrderByIdAsync(orderId);
+    Store = await _storeService.GetStoreBySlugAsync(storeSlug);
+
+    if (Order == null || Store == null)
+    {
+    return NotFound();
+    }
+
+    return Page();
+    }
+    }
+    }
