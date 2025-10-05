@@ -1,9 +1,11 @@
-﻿// Pages/Dashboard/Products/Index.cshtml.cs
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using EcommercePlatform.Core.Entities;
 using EcommercePlatform.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace EcommercePlatform.Web.Pages.Dashboard.Products
 {
@@ -12,36 +14,31 @@ namespace EcommercePlatform.Web.Pages.Dashboard.Products
     {
         private readonly IProductService _productService;
         private readonly IStoreService _storeService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public IndexModel(IProductService productService, IStoreService storeService)
+        public IndexModel(IProductService productService, IStoreService storeService, UserManager<ApplicationUser> userManager)
         {
             _productService = productService;
             _storeService = storeService;
+            _userManager = userManager;
         }
 
-        public List<Product> Products { get; set; }
+        public IEnumerable<Product> Products { get; set; }
         public Store CurrentStore { get; set; }
-        public int StoreId { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int storeId)
+        public async Task<IActionResult> OnGetAsync()
         {
-            StoreId = storeId;
-            CurrentStore = await _storeService.GetStoreByIdAsync(storeId);
+            var user = await _userManager.GetUserAsync(User);
+            var store = await _storeService.GetStoreByUserIdAsync(user.Id);
 
-            if (CurrentStore == null)
+            if (store == null)
             {
-                return NotFound();
+                // إذا لم يكن لدى المستخدم متجر، قم بإعادة توجيهه لإنشاء واحد
+                return RedirectToPage("/Dashboard/Stores/Create");
             }
-
-            Products = await _productService.GetStoreProductsAsync(storeId);
+            CurrentStore = store;
+            Products = await _productService.GetProductsByStoreIdAsync(store.Id);
             return Page();
-        }
-
-        public async Task<IActionResult> OnPostDeleteAsync(int productId, int storeId)
-        {
-            await _productService.DeleteProductAsync(productId);
-            TempData["Success"] = "تم حذف المنتج بنجاح";
-            return RedirectToPage(new { storeId });
         }
     }
 }

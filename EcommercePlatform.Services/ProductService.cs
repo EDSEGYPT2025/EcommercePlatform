@@ -1,11 +1,12 @@
-﻿// ProductService.cs
-using EcommercePlatform.Core.Entities;
+﻿using EcommercePlatform.Core.Entities;
 using EcommercePlatform.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace EcommercePlatform.Services
 {
-    // ProductService.cs
     public class ProductService : IProductService
     {
         private readonly ApplicationDbContext _context;
@@ -15,62 +16,56 @@ namespace EcommercePlatform.Services
             _context = context;
         }
 
-        public async Task<List<Product>> GetStoreProductsAsync(int storeId)
+        public async Task CreateProductAsync(Product product)
         {
-            return await _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Images)
-                .Where(p => p.StoreId == storeId)
-                .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync();
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteProductAsync(int productId)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            if (product != null)
+            {
+                _context.Products.Remove(product);
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task<Product> GetProductByIdAsync(int productId)
         {
             return await _context.Products
-                .Include(p => p.Category)
                 .Include(p => p.Images)
                 .FirstOrDefaultAsync(p => p.Id == productId);
         }
 
-        public async Task<Product> CreateProductAsync(Product product)
+        public async Task<IEnumerable<Product>> GetProductsByStoreIdAsync(int storeId)
         {
-            product.Slug = GenerateSlug(product.Name);
-            product.CreatedAt = DateTime.UtcNow;
+            return await _context.Products
+                .Where(p => p.StoreId == storeId)
+                .Include(p => p.Images)
+                .ToListAsync();
+        }
 
-            _context.Products.Add(product);
+        public async Task<List<Product>> GetStoreProductsAsync(int id)
+        {
+            return await _context.Products
+               .Where(p => p.StoreId == id && p.IsActive)
+               .Include(p => p.Images)
+               .OrderByDescending(p => p.CreatedAt)
+               .ToListAsync();
+        }
+
+        public async Task UpdateProductAsync(Product product)
+        {
+            _context.Entry(product).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-
-            return product;
         }
 
-        public async Task<bool> UpdateProductAsync(Product product)
+        /// <inheritdoc />
+        public async Task<int> GetActiveProductsCountAsync()
         {
-            _context.Products.Update(product);
-            return await _context.SaveChangesAsync() > 0;
-        }
-
-        public async Task<bool> DeleteProductAsync(int productId)
-        {
-            var product = await _context.Products.FindAsync(productId);
-            if (product == null) return false;
-
-            _context.Products.Remove(product);
-            return await _context.SaveChangesAsync() > 0;
-        }
-
-        public async Task<bool> UpdateStockAsync(int productId, int quantity)
-        {
-            var product = await _context.Products.FindAsync(productId);
-            if (product == null) return false;
-
-            product.Stock -= quantity;
-            return await _context.SaveChangesAsync() > 0;
-        }
-
-        private string GenerateSlug(string name)
-        {
-            return name.ToLower().Replace(" ", "-");
+            return await _context.Products.CountAsync(p => p.IsActive);
         }
     }
 }

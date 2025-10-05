@@ -1,18 +1,21 @@
-// Pages/Index.cshtml.cs
-using EcommercePlatform.Core.Entities;
-using EcommercePlatform.Infrastructure.Data;
+﻿using EcommercePlatform.Core.Entities;
+using EcommercePlatform.Services; // استخدام الخدمات
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace EcommercePlatform.Web.Pages
 {
     public class IndexModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        // تم استبدال DbContext بالخدمات المتخصصة
+        private readonly IStoreService _storeService;
+        private readonly IProductService _productService;
 
-        public IndexModel(ApplicationDbContext context)
+        public IndexModel(IStoreService storeService, IProductService productService)
         {
-            _context = context;
+            _storeService = storeService;
+            _productService = productService;
         }
 
         public List<Store> FeaturedStores { get; set; }
@@ -21,15 +24,10 @@ namespace EcommercePlatform.Web.Pages
 
         public async Task OnGetAsync()
         {
-            FeaturedStores = await _context.Stores
-                .Include(s => s.Settings)
-                .Where(s => s.IsActive)
-                .OrderByDescending(s => s.CreatedAt)
-                .Take(6)
-                .ToListAsync();
-
-            TotalStores = await _context.Stores.CountAsync(s => s.IsActive);
-            TotalProducts = await _context.Products.CountAsync(p => p.IsActive);
+            // استخدام الخدمات لجلب البيانات، مما يفصل الواجهة عن قاعدة البيانات
+            FeaturedStores = await _storeService.GetFeaturedStoresAsync(6);
+            TotalStores = await _storeService.GetActiveStoresCountAsync();
+            TotalProducts = await _productService.GetActiveProductsCountAsync();
         }
     }
 }

@@ -1,16 +1,22 @@
-﻿// IProductService.cs
-using EcommercePlatform.Core.Entities;
+﻿using EcommercePlatform.Core.Entities;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace EcommercePlatform.Services
 {
-    // IProductService.cs
     public interface IProductService
     {
-        Task<List<Product>> GetStoreProductsAsync(int storeId);
         Task<Product> GetProductByIdAsync(int productId);
-        Task<Product> CreateProductAsync(Product product);
-        Task<bool> UpdateProductAsync(Product product);
-        Task<bool> DeleteProductAsync(int productId);
-        Task<bool> UpdateStockAsync(int productId, int quantity);
+        Task<IEnumerable<Product>> GetProductsByStoreIdAsync(int storeId);
+        Task CreateProductAsync(Product product);
+        Task UpdateProductAsync(Product product);
+        Task DeleteProductAsync(int productId);
+        Task<List<Product>> GetStoreProductsAsync(int id);
+
+        /// <summary>
+        /// يحسب العدد الإجمالي للمنتجات النشطة في جميع المتاجر.
+        /// </summary>
+        /// <returns>العدد الإجمالي للمنتجات النشطة.</returns>
+        Task<int> GetActiveProductsCountAsync();
     }
 }

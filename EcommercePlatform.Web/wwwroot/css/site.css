@@ -1,31 +1,79 @@
+/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+/* General Body Styles */
+body {
+    font-family: 'Cairo', sans-serif;
+    background-color: #f8f9fa; /* Light grey background for better contrast */
+}
+
+/* Navbar Customization */
+.navbar-brand {
+    font-size: 1.5rem;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+}
+
+/* Card Styles with Professional Shadow */
+.card {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+.card-header {
+    border-bottom: none;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
+
+/* Button Styles */
+.btn {
+    border-radius: 0.3rem;
+    padding: 0.6rem 1.2rem;
+    font-weight: bold;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-primary {
+    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+}
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0, 123, 255, 0.4);
+    }
+
+/* Footer Styles */
+.footer {
+    background-color: #ffffff;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    html {
+        font-size: 16px;
+    }
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
-}
-
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
-}
-
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+    margin-bottom: 60px;
 }

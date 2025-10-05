@@ -1,32 +1,31 @@
-// Pages/Dashboard/Index.cshtml.cs
+﻿using EcommercePlatform.Core.Entities;
+using EcommercePlatform.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using EcommercePlatform.Core.Entities;
-using EcommercePlatform.Services;
+using System.Threading.Tasks;
 
 namespace EcommercePlatform.Web.Pages.Dashboard
 {
     [Authorize]
     public class IndexModel : PageModel
     {
-        private readonly IStoreService _storeService;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IStoreService _storeService;
 
-        public IndexModel(IStoreService storeService, UserManager<ApplicationUser> userManager)
+        public IndexModel(UserManager<ApplicationUser> userManager, IStoreService storeService)
         {
-            _storeService = storeService;
             _userManager = userManager;
+            _storeService = storeService;
         }
 
-        public List<Store> Stores { get; set; }
+        public Store UserStore { get; set; }
 
-        public async Task<IActionResult> OnGetAsync()
+        public async Task OnGetAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
-            Stores = await _storeService.GetUserStoresAsync(user.Id);
-            return Page();
+            var userId = _userManager.GetUserId(User);
+            // تم تصحيح اسم الدالة هنا
+            UserStore = await _storeService.GetUserStoresAsync(userId);
         }
     }
 }

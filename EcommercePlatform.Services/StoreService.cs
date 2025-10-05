@@ -1,11 +1,16 @@
 ﻿using EcommercePlatform.Core.Entities;
 using EcommercePlatform.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace EcommercePlatform.Services
 {
+    /// <summary>
+    /// التنفيذ الفعلي لخدمات إدارة المتاجر.
+    /// </summary>
     public class StoreService : IStoreService
     {
         private readonly ApplicationDbContext _context;
@@ -15,54 +20,47 @@ namespace EcommercePlatform.Services
             _context = context;
         }
 
+        /// <inheritdoc />
         public async Task CreateStoreAsync(Store store)
         {
-            _context.Stores.Add(store);
+            // عند إنشاء متجر جديد، قم بإنشاء إعدادات افتراضية له تلقائياً
+            store.Settings = new StoreSettings();
+            await _context.Stores.AddAsync(store);
             await _context.SaveChangesAsync();
         }
 
-        public Task<bool> DeleteStoreAsync(int storeId)
+        /// <inheritdoc />
+        public async Task<Store> GetStoreBySlugAsync(string slug)
         {
-            throw new NotImplementedException();
+            // استخدام Include لجلب البيانات المرتبطة (صاحب المتجر والإعدادات) في استعلام واحد
+            return await _context.Stores
+                .Include(s => s.Owner)
+                .Include(s => s.Settings)
+                .FirstOrDefaultAsync(s => s.Slug == slug);
         }
 
-        public async Task<IEnumerable<Store>> GetAllStoresAsync()
-        {
-            return await _context.Stores.ToListAsync();
-        }
-        public async Task<Store> GetStoreByIdAsync(int id)
-        {
-            return await _context.Stores.FindAsync(id);
-        }
-
-        public Task<Store> GetStoreBySlugAsync(string slug)
-        {
-            throw new NotImplementedException();
-        }
-
+        /// <inheritdoc />
         public async Task<Store> GetStoreByUserIdAsync(string userId)
         {
-            return await _context.Stores.FirstOrDefaultAsync(s => s.OwnerId == userId);
+            return await _context.Stores
+                .Include(s => s.Settings)
+                .FirstOrDefaultAsync(s => s.OwnerId == userId);
         }
 
-        public Task<List<Store>> GetUserStoresAsync(string userId)
+        /// <inheritdoc />
+        public async Task<List<Store>> GetFeaturedStoresAsync(int count)
         {
-            throw new NotImplementedException();
+            return await _context.Stores
+                .Where(s => s.IsActive)
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(count)
+                .ToListAsync();
         }
 
-        public Task<bool> IsSlugAvailableAsync(string slug, int? excludeStoreId = null)
+        /// <inheritdoc />
+        public async Task<int> GetActiveStoresCountAsync()
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> UpdateStoreAsync(Store store)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<Store> IStoreService.CreateStoreAsync(Store store)
-        {
-            throw new NotImplementedException();
+            return await _context.Stores.CountAsync(s => s.IsActive);
         }
     }
 }
